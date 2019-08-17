@@ -78,6 +78,17 @@
      */
     splitByGrapheme: false,
 
+
+    /**
+     * If false filters line breaks from text before rendering
+     */
+    multiLine: true,
+
+    /**
+     * If true stops automatic wrap
+     */
+    wordWrap: true,
+
     /**
      * Unlike superclass's version of this function, Textbox does not update
      * its width.
@@ -107,6 +118,8 @@
       this.height = this.calcTextHeight();
       this.saveState({ propertySet: '_dimensionAffectingProps' });
     },
+
+
 
     /**
      * Generate an object that translates the style object so that it is
@@ -339,6 +352,11 @@
           line = [];
           lineWidth = wordWidth;
           lineJustStarted = true;
+
+          if ( this.wordWrap === false )
+          {
+            break;
+          }
         }
         else {
           lineWidth += additionalSpace;
@@ -405,6 +423,11 @@
     * @override
     */
     _splitTextIntoLines: function(text) {
+      if ( !this.multiLine )
+      {
+        text = text.replace( /\r?\n|\r/g, '' );
+      }
+
       var newText = fabric.Text.prototype._splitTextIntoLines.call(this, text),
           graphemeLines = this._wrapText(newText.lines, this.width),
           lines = new Array(graphemeLines.length);
