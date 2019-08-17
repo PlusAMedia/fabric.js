@@ -29055,12 +29055,14 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 /* _TO_SVG_END_ */
 
 
+// noinspection JSUnresolvedVariable,ThisExpressionReferencesGlobalObjectJS
 (function(global) {
 
   'use strict';
 
   var fabric = global.fabric || (global.fabric = {});
 
+  // noinspection JSCheckFunctionSignatures
   /**
    * Textbox class, based on IText, allows the user to resize the text rectangle
    * and wraps lines automatically. Textboxes have their Y scaling locked, the
@@ -29119,7 +29121,10 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
      * @type Object
      * @private
      */
-    _dimensionAffectingProps: fabric.Text.prototype._dimensionAffectingProps.concat('width'),
+    _dimensionAffectingProps: fabric.Text.prototype._dimensionAffectingProps.concat([
+      'width',
+      'multiLine',
+      'wordWrap']),
 
     /**
      * Use this regular expression to split strings in breakable lines
@@ -29129,7 +29134,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
     /**
      * Use this boolean property in order to split strings that have no white space concept.
-     * this is a cheap way to help with chinese/japaense
+     * this is a cheap way to help with chinese/japanese
      * @type Boolean
      * @since 2.6.0
      */
@@ -29214,6 +29219,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
     /**
      * Returns true if object has a style property or has it on a specified line
+     * @param property
      * @param {Number} lineIndex
      * @return {Boolean}
      */
@@ -29250,6 +29256,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         for (var p2 in obj[p1]) {
           if (p2 >= offset && (!shouldLimit || p2 < nextOffset)) {
             // eslint-disable-next-line no-unused-vars
+            // noinspection LoopStatementThatDoesntLoopJS
             for (var p3 in obj[p1][p2]) {
               return false;
             }
@@ -29318,7 +29325,6 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     /**
      * Set the line style to an empty object so that is initialized
      * @param {Number} lineIndex
-     * @param {Object} style
      * @private
      */
     _setLineStyle: function(lineIndex) {
@@ -29348,8 +29354,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
     /**
      * Helper function to measure a string of text, given its lineIndex and charIndex offset
      * it gets called when charBounds are not available yet.
-     * @param {CanvasRenderingContext2D} ctx
-     * @param {String} text
+     * @param {String|String[]} word
      * @param {number} lineIndex
      * @param {number} charOffset
      * @returns {number}
@@ -29359,6 +29364,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       var width = 0, prevGrapheme, skipLeft = true;
       charOffset = charOffset || 0;
       for (var i = 0, len = word.length; i < len; i++) {
+        // noinspection JSUnusedAssignment
         var box = this._getGraphemeBox(word[i], lineIndex, i + charOffset, prevGrapheme, skipLeft);
         width += box.kernedWidth;
         prevGrapheme = word[i];
@@ -29368,10 +29374,10 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
 
     /**
      * Wraps a line of text using the width of the Textbox and a context.
-     * @param {Array} line The grapheme array that represent the line
+     * @param {Array|String} _line The grapheme array that represent the line
      * @param {Number} lineIndex
      * @param {Number} desiredWidth width you want to wrap the line to
-     * @param {Number} reservedSpace space to remove from wrapping for custom functionalities
+     * @param {Number} [reservedSpace=0] space to remove from wrapping for custom functionality
      * @returns {Array} Array of line(s) into which the given text is wrapped
      * to.
      */
@@ -29380,7 +29386,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
           splitByGrapheme = this.splitByGrapheme,
           graphemeLines = [],
           line = [],
-          // spaces in different languges?
+          // spaces in different languages?
           words = splitByGrapheme ? fabric.util.string.graphemeSplit(_line) : _line.split(this._wordJoiners),
           word = '',
           offset = 0,
@@ -29389,7 +29395,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
           infixWidth = 0,
           largestWordWidth = 0,
           lineJustStarted = true,
-          additionalSpace = splitByGrapheme ? 0 : this._getWidthOfCharSpacing(),
+          additionalSpace = splitByGrapheme ? 0 : this._getWidthOfCharSpacing();
           reservedSpace = reservedSpace || 0;
       // fix a difference between split and graphemeSplit
       if (words.length === 0) {
@@ -29453,6 +29459,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
         // is last line, return true;
         return true;
       }
+      // noinspection RedundantIfStatementJS
       if (this._styleMap[lineIndex + 1].line !== this._styleMap[lineIndex].line) {
         // this is last line before a line break, return true;
         return true;
@@ -29507,7 +29514,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
           linesToKeep[this._styleMap[prop].line] = 1;
         }
       }
-      for (var prop in this.styles) {
+      for ( prop in this.styles) {
         if (!linesToKeep[prop]) {
           delete this.styles[prop];
         }
