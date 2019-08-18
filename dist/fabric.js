@@ -566,7 +566,7 @@ fabric.CommonMethods = {
   /**
    * Sets property to a given value. When changing position/dimension -related properties (left, top, scale, angle, etc.) `set` does not update position of object's borders/controls. If you need to update those, call `setCoords()`.
    * @param {String|Object} key Property name or object (if object, iterate over the object properties)
-   * @param {Object|Function} value Property value (if function, the value is passed into it and its return value is used as a new one)
+   * @param {Object|Function} [value] Property value (if function, the value is passed into it and its return value is used as a new one)
    * @return {fabric.Object} thisArg
    * @chainable
    */
@@ -1024,8 +1024,8 @@ fabric.CommonMethods = {
      * @memberOf fabric.util
      * @param {Array} objects Objects to enliven
      * @param {Function} callback Callback to invoke when all objects are created
-     * @param {String} namespace Namespace to get klass "Class" object from
-     * @param {Function} reviver Method for further parsing of object elements,
+     * @param {String} [namespace=''] Namespace to get klass "Class" object from
+     * @param {Function} [reviver=null] Method for further parsing of object elements,
      * called after each fabric object created.
      */
     enlivenObjects: function(objects, callback, namespace, reviver) {
@@ -10227,15 +10227,30 @@ fabric.PatternBrush = fabric.util.createClass(fabric.PencilBrush, /** @lends fab
 
       transform.newScaleX = scaleX;
       transform.newScaleY = scaleY;
-      if (by === 'x' && target instanceof fabric.Textbox) {
-        var w = target.width * (localMouse.x / _dim.x);
-        if (w >= target.getMinWidth()) {
-          scaled = w !== target.width;
-          target.set('width', w);
-          return scaled;
+
+      if ( target instanceof fabric.Textbox )
+      {
+        if (by === 'x' ) {
+          var w = target.width * (localMouse.x / _dim.x);
+          if (w >= target.getMinWidth()) {
+            scaled = w !== target.width;
+            target.set('width', w);
+            return scaled;
+          }
+          return false;
         }
-        return false;
+
+        if (by === 'y' ) {
+          var h = target.height * (localMouse.y / _dim.y);
+          //if (w >= target.getMinHeight()) {
+            scaled = h !== target.height;
+            target.set('height', h);
+            return scaled;
+          //}
+          //return false;
+        }
       }
+
 
       if (lockScalingFlip && scaleX <= 0 && scaleX < target.scaleX) {
         forbidScalingX = true;
@@ -12677,6 +12692,8 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
   /**
    * Root object class from which all 2d shape classes inherit from
    * @class fabric.Object
+   * @extends {fabric.CommonMethods}
+   *
    * @tutorial {@link http://fabricjs.com/fabric-intro-part-1#objects}
    * @see {@link fabric.Object#initialize} for constructor definition
    *
@@ -15389,7 +15406,7 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
     /**
      * Scales an object to a given width, with respect to bounding box (scaling by x/y equally)
      * @param {Number} value New width value
-     * @param {Boolean} absolute ignore viewport
+     * @param {Boolean} [absolute] ignore viewport
      * @return {fabric.Object} thisArg
      * @chainable
      */
@@ -15402,7 +15419,7 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
     /**
      * Scales an object to a given height, with respect to bounding box (scaling by x/y equally)
      * @param {Number} value New height value
-     * @param {Boolean} absolute ignore viewport
+     * @param {Boolean} [absolute] ignore viewport
      * @return {fabric.Object} thisArg
      * @chainable
      */
@@ -29083,6 +29100,8 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
      */
     type: 'textbox',
 
+    allowScaleText: true,
+
     /**
      * Minimum width of textbox, in pixels.
      * @type Number
@@ -29478,6 +29497,97 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       }
       return 1;
     },
+
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} ctx Context to render on
+     * @param {String} method Method name ("fillText" or "strokeText")
+     */
+    _renderTextCommon: function(ctx, method) {
+      ctx.save();
+      var lineHeights = 0, left = this._getLeftOffset(), top = this._getTopOffset(),
+        offsets = this._applyPatternGradientTransform(ctx, method === 'fillText' ? this.fill : this.stroke);
+      for (var i = 0, len = this._textLines.length; i < len; i++) {
+        //var heightOfLine = this.getHeightOfLine(i),
+        var heightOfLine = this.getHeightOfLine(i) * this.lineHeight;
+        var maxHeight = heightOfLine / this.lineHeight;
+        var leftOffset = this._getLineLeftOffset(i);
+        // this._renderTextLine(
+        //   method,
+        //   ctx,
+        //   this._textLines[i],
+        //   left + leftOffset - offsets.offsetX,
+        //   top + lineHeights + maxHeight - offsets.offsetY,
+        //   i
+        // );
+        this._renderTextLine(
+          method,
+          ctx,
+          this._textLines[i],
+          left + leftOffset - offsets.offsetX,
+          // lineHeights + maxHeight - offsets.offsetY,
+          top + lineHeights - offsets.offsetY,
+          i
+        );
+        lineHeights += heightOfLine;
+      }
+      ctx.restore();
+    },
+    /**
+     * Transforms context when rendering an object
+     * @param {CanvasRenderingContext2D} ctx Context
+     */
+    transform: function(ctx) {
+      var m;
+      if (this.group && !this.group._transformDone) {
+        m = this.calcTransformMatrix();
+      }
+      else {
+        m = this.calcOwnMatrix();
+      }
+      if ( this.allowScaleText )
+      {
+        ctx.transform( m[ 0 ], m[ 1 ], m[ 2 ], m[ 3 ], m[ 4 ], m[ 5 ] );
+      }
+      else
+      {
+        ctx.transform( 1, 0, 0, 1, m[ 4 ], m[ 5 ] );
+      }
+    },
+
+    // render: function(ctx) {
+    //   // do not render if width/height are zeros or object is not visible
+    //   if (this.isNotVisible()) {
+    //     return;
+    //   }
+    //   if (this.canvas && this.canvas.skipOffscreen && !this.group && !this.isOnScreen()) {
+    //     return;
+    //   }
+    //   ctx.save();
+    //   this._setupCompositeOperation(ctx);
+    //   this.drawSelectionBackground(ctx);
+    //   this.transform(ctx);
+    //   this._setOpacity(ctx);
+    //   this._setShadow(ctx, this);
+    //   if (this.transformMatrix) {
+    //     ctx.transform.apply(ctx, this.transformMatrix);
+    //   }
+    //   this.clipTo && fabric.util.clipContext(this, ctx);
+    //   if (this.shouldCache()) {
+    //     this.renderCache();
+    //     this.drawCacheOnCanvas(ctx);
+    //   }
+    //   else {
+    //     this._removeCacheCanvas();
+    //     this.dirty = false;
+    //     this.drawObject(ctx);
+    //     if (this.objectCaching && this.statefullCache) {
+    //       this.saveState({ propertySet: 'cacheProperties' });
+    //     }
+    //   }
+    //   this.clipTo && ctx.restore();
+    //   ctx.restore();
+    // },
 
     /**
     * Gets lines of text to render in the Textbox. This function calculates

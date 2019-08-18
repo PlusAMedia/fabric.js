@@ -907,15 +907,30 @@
 
       transform.newScaleX = scaleX;
       transform.newScaleY = scaleY;
-      if (by === 'x' && target instanceof fabric.Textbox) {
-        var w = target.width * (localMouse.x / _dim.x);
-        if (w >= target.getMinWidth()) {
-          scaled = w !== target.width;
-          target.set('width', w);
-          return scaled;
+
+      if ( target instanceof fabric.Textbox )
+      {
+        if (by === 'x' ) {
+          var w = target.width * (localMouse.x / _dim.x);
+          if (w >= target.getMinWidth()) {
+            scaled = w !== target.width;
+            target.set('width', w);
+            return scaled;
+          }
+          return false;
         }
-        return false;
+
+        if (by === 'y' ) {
+          var h = target.height * (localMouse.y / _dim.y);
+          //if (w >= target.getMinHeight()) {
+            scaled = h !== target.height;
+            target.set('height', h);
+            return scaled;
+          //}
+          //return false;
+        }
       }
+
 
       if (lockScalingFlip && scaleX <= 0 && scaleX < target.scaleX) {
         forbidScalingX = true;

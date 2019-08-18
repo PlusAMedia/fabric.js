@@ -358,7 +358,7 @@
     /**
      * Scales an object to a given width, with respect to bounding box (scaling by x/y equally)
      * @param {Number} value New width value
-     * @param {Boolean} absolute ignore viewport
+     * @param {Boolean} [absolute] ignore viewport
      * @return {fabric.Object} thisArg
      * @chainable
      */
@@ -371,7 +371,7 @@
     /**
      * Scales an object to a given height, with respect to bounding box (scaling by x/y equally)
      * @param {Number} value New height value
-     * @param {Boolean} absolute ignore viewport
+     * @param {Boolean} [absolute] ignore viewport
      * @return {fabric.Object} thisArg
      * @chainable
      */

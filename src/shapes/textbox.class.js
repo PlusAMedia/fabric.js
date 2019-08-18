@@ -26,6 +26,8 @@
      */
     type: 'textbox',
 
+    allowScaleText: true,
+
     /**
      * Minimum width of textbox, in pixels.
      * @type Number
@@ -421,6 +423,97 @@
       }
       return 1;
     },
+
+    /**
+     * @private
+     * @param {CanvasRenderingContext2D} ctx Context to render on
+     * @param {String} method Method name ("fillText" or "strokeText")
+     */
+    _renderTextCommon: function(ctx, method) {
+      ctx.save();
+      var lineHeights = 0, left = this._getLeftOffset(), top = this._getTopOffset(),
+        offsets = this._applyPatternGradientTransform(ctx, method === 'fillText' ? this.fill : this.stroke);
+      for (var i = 0, len = this._textLines.length; i < len; i++) {
+        //var heightOfLine = this.getHeightOfLine(i),
+        var heightOfLine = this.getHeightOfLine(i) * this.lineHeight;
+        var maxHeight = heightOfLine / this.lineHeight;
+        var leftOffset = this._getLineLeftOffset(i);
+        // this._renderTextLine(
+        //   method,
+        //   ctx,
+        //   this._textLines[i],
+        //   left + leftOffset - offsets.offsetX,
+        //   top + lineHeights + maxHeight - offsets.offsetY,
+        //   i
+        // );
+        this._renderTextLine(
+          method,
+          ctx,
+          this._textLines[i],
+          left + leftOffset - offsets.offsetX,
+          // lineHeights + maxHeight - offsets.offsetY,
+          top + lineHeights - offsets.offsetY,
+          i
+        );
+        lineHeights += heightOfLine;
+      }
+      ctx.restore();
+    },
+    /**
+     * Transforms context when rendering an object
+     * @param {CanvasRenderingContext2D} ctx Context
+     */
+    transform: function(ctx) {
+      var m;
+      if (this.group && !this.group._transformDone) {
+        m = this.calcTransformMatrix();
+      }
+      else {
+        m = this.calcOwnMatrix();
+      }
+      if ( this.allowScaleText )
+      {
+        ctx.transform( m[ 0 ], m[ 1 ], m[ 2 ], m[ 3 ], m[ 4 ], m[ 5 ] );
+      }
+      else
+      {
+        ctx.transform( 1, 0, 0, 1, m[ 4 ], m[ 5 ] );
+      }
+    },
+
+    // render: function(ctx) {
+    //   // do not render if width/height are zeros or object is not visible
+    //   if (this.isNotVisible()) {
+    //     return;
+    //   }
+    //   if (this.canvas && this.canvas.skipOffscreen && !this.group && !this.isOnScreen()) {
+    //     return;
+    //   }
+    //   ctx.save();
+    //   this._setupCompositeOperation(ctx);
+    //   this.drawSelectionBackground(ctx);
+    //   this.transform(ctx);
+    //   this._setOpacity(ctx);
+    //   this._setShadow(ctx, this);
+    //   if (this.transformMatrix) {
+    //     ctx.transform.apply(ctx, this.transformMatrix);
+    //   }
+    //   this.clipTo && fabric.util.clipContext(this, ctx);
+    //   if (this.shouldCache()) {
+    //     this.renderCache();
+    //     this.drawCacheOnCanvas(ctx);
+    //   }
+    //   else {
+    //     this._removeCacheCanvas();
+    //     this.dirty = false;
+    //     this.drawObject(ctx);
+    //     if (this.objectCaching && this.statefullCache) {
+    //       this.saveState({ propertySet: 'cacheProperties' });
+    //     }
+    //   }
+    //   this.clipTo && ctx.restore();
+    //   ctx.restore();
+    // },
 
     /**
     * Gets lines of text to render in the Textbox. This function calculates

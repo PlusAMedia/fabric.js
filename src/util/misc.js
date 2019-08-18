@@ -408,8 +408,8 @@
      * @memberOf fabric.util
      * @param {Array} objects Objects to enliven
      * @param {Function} callback Callback to invoke when all objects are created
-     * @param {String} namespace Namespace to get klass "Class" object from
-     * @param {Function} reviver Method for further parsing of object elements,
+     * @param {String} [namespace=''] Namespace to get klass "Class" object from
+     * @param {Function} [reviver=null] Method for further parsing of object elements,
      * called after each fabric object created.
      */
     enlivenObjects: function(objects, callback, namespace, reviver) {
