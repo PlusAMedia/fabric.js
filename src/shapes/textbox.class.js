@@ -68,6 +68,7 @@
      */
     _dimensionAffectingProps: fabric.Text.prototype._dimensionAffectingProps.concat([
       'width',
+      'lineHeight',
       'multiLine',
       'wordWrap']),
 
@@ -434,27 +435,27 @@
       var lineHeights = 0, left = this._getLeftOffset(), top = this._getTopOffset(),
         offsets = this._applyPatternGradientTransform(ctx, method === 'fillText' ? this.fill : this.stroke);
       for (var i = 0, len = this._textLines.length; i < len; i++) {
-        //var heightOfLine = this.getHeightOfLine(i),
-        var heightOfLine = this.getHeightOfLine(i) * this.lineHeight;
+        var heightOfLine = this.getHeightOfLine(i);
+        // var heightOfLine = this.getHeightOfLine(i) * this.lineHeight;
         var maxHeight = heightOfLine / this.lineHeight;
         var leftOffset = this._getLineLeftOffset(i);
-        // this._renderTextLine(
-        //   method,
-        //   ctx,
-        //   this._textLines[i],
-        //   left + leftOffset - offsets.offsetX,
-        //   top + lineHeights + maxHeight - offsets.offsetY,
-        //   i
-        // );
         this._renderTextLine(
           method,
           ctx,
           this._textLines[i],
           left + leftOffset - offsets.offsetX,
-          // lineHeights + maxHeight - offsets.offsetY,
-          top + lineHeights - offsets.offsetY,
+          top + lineHeights + maxHeight - offsets.offsetY,
           i
         );
+        // this._renderTextLine(
+        //   method,
+        //   ctx,
+        //   this._textLines[i],
+        //   left + leftOffset - offsets.offsetX,
+        //   // lineHeights + maxHeight - offsets.offsetY,
+        //   top + lineHeights - offsets.offsetY,
+        //   i
+        // );
         lineHeights += heightOfLine;
       }
       ctx.restore();
