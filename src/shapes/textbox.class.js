@@ -123,7 +123,7 @@
         this.enlargeSpaces();
       }
       // clear cache and re-calculate height
-      this.height = this.calcTextHeight();
+      this.height = Math.max( this.height, this.calcTextHeight() );
       this.saveState({ propertySet: '_dimensionAffectingProps' });
     },
 
